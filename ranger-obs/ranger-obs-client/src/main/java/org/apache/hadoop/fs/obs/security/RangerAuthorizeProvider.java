@@ -5,6 +5,7 @@
 package org.apache.hadoop.fs.obs.security;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.security.token.Token;
 import org.apache.ranger.obs.client.ClientConstants;
 import org.apache.ranger.obs.client.RangerObsClient;
@@ -13,15 +14,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
 
 /**
  * implement AuthorizeProvider
  *
  * @since 2021-08-16
  */
-public class RangerAuthorizeProvider implements AuthorizeProvider, DelegationTokenCapability {
+public class RangerAuthorizeProvider implements AuthorizeProvider,DelegationTokenProvider {
 
-    public static final Logger LOG = LoggerFactory.getLogger(RangerAuthorizeProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAuthorizeProvider.class);
 
     private RangerObsClient rangerObsClient;
 
@@ -48,8 +50,18 @@ public class RangerAuthorizeProvider implements AuthorizeProvider, DelegationTok
     }
 
     @Override
-    public Token<?> getDelegationToken(String renewer) throws IOException {
-        return rangerObsClient.getDelegationToken(renewer);
+    public void initialize(FileSystem fs, URI uri, Configuration conf) {
+
+    }
+
+    @Override
+    public Token<?> getDelegationToken(String renewer)  {
+        try {
+            rangerObsClient.getDelegationToken(renewer);
+        } catch (IOException e) {
+            LOG.error("getDelegationToken fail!", e);
+        }
+        return null;
     }
 
     @Override
