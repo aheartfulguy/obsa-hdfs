@@ -51,7 +51,16 @@ public class RangerAuthorizeProvider implements AuthorizeProvider,DelegationToke
 
     @Override
     public void initialize(FileSystem fs, URI uri, Configuration conf) {
-
+        if (rangerObsClient == null) {
+            try {
+                Class<?> clientClassName = conf.getClass(ClientConstants.RANGER_OBS_CLIENT_IMPL,
+                    ClientConstants.DEFAULT_RANGER_OBS_CLIENT_IMPL);
+                rangerObsClient = (RangerObsClient) clientClassName.newInstance();
+                rangerObsClient.init(conf);
+            } catch (IOException | InstantiationException | IllegalAccessException e) {
+                LOG.error("getRangerClient error",e);
+            }
+        }
     }
 
     @Override
