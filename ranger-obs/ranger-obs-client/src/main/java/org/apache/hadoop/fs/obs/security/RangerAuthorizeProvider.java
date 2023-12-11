@@ -66,7 +66,7 @@ public class RangerAuthorizeProvider implements AuthorizeProvider,DelegationToke
     @Override
     public Token<?> getDelegationToken(String renewer)  {
         try {
-            rangerObsClient.getDelegationToken(renewer);
+            return rangerObsClient.getDelegationToken(renewer);
         } catch (IOException e) {
             LOG.error("getDelegationToken fail!", e);
         }
