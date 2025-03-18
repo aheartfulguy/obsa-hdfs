@@ -203,7 +203,6 @@ public class FlinkOBSRecoverableFsDataOutputStream extends RecoverableFsDataOutp
         try {
             fileSystem.truncate(path, recoverable.offset());
         } catch (IOException e) {
-            LOG.error("truncate failed,path:{},offset:{}", path, recoverable.offset());
             throw new IOException("truncate failed,path:" + path + "offset:" + recoverable.offset(), e);
         }
     }
