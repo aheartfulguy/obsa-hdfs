@@ -200,19 +200,11 @@ public class FlinkOBSRecoverableFsDataOutputStream extends RecoverableFsDataOutp
         final FlinkOBSFsRecoverable recoverable)
         throws IOException {
 
-        // fileSystem.truncate(path,recoverable.offset());
-        while (true) {
-            try {
-                fileSystem.truncate(path, recoverable.offset());
-            } catch (OBSAlreadyBeingCreatedException e) {
-                try {
-                    Thread.sleep(500L);
-                } catch (InterruptedException ex) {
-                    throw e;
-                }
-                continue;
-            }
-            break;
+        try {
+            fileSystem.truncate(path, recoverable.offset());
+        } catch (IOException e) {
+            LOG.error("truncate failed,path:{},offset:{}", path, recoverable.offset());
+            throw new IOException("truncate failed,path:" + path + "offset:" + recoverable.offset(), e);
         }
     }
 }
