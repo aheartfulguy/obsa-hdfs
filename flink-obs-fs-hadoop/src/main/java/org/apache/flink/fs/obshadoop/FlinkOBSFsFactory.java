@@ -21,47 +21,26 @@ package org.apache.flink.fs.obshadoop;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.core.fs.FileSystemFactory;
-import org.apache.flink.runtime.util.HadoopConfigLoader;
+import org.apache.flink.runtime.util.HadoopUtils;
 import org.apache.hadoop.fs.obs.OBSFileSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collections;
-import java.util.Set;
 
-/**
- * @Author:l30002155 @Email:lixianwei6@huawei.com @Date:2020/9/16 10:58
- */
+
 public class FlinkOBSFsFactory implements FileSystemFactory {
+    private static final Logger LOG = LoggerFactory.getLogger(FlinkOBSFsFactory.class);
 
-    private static final String[] FLINK_CONFIG_PREFIXES = {"fs.obs.", "obs."};
+    private Configuration flinkConfig;
 
-    private static final String HADOOP_CONFIG_PREFIX = "fs.obs.";
-
-    private static final String[][] MIRRORED_CONFIG_KEYS = {};
-
-    private static final Set<String> PACKAGE_PREFIXES_TO_SHADE = Collections.emptySet();
-
-    private static final Set<String> CONFIG_KEYS_TO_SHADE = Collections.emptySet();
-
-    private static final String FLINK_SHADING_PREFIX = "";
-
-    private final HadoopConfigLoader hadoopConfigLoader;
-
-    public FlinkOBSFsFactory() {
-        this.hadoopConfigLoader =
-            new HadoopConfigLoader(
-                FLINK_CONFIG_PREFIXES,
-                MIRRORED_CONFIG_KEYS,
-                HADOOP_CONFIG_PREFIX,
-                PACKAGE_PREFIXES_TO_SHADE,
-                CONFIG_KEYS_TO_SHADE,
-                FLINK_SHADING_PREFIX);
-    }
+    private org.apache.hadoop.conf.Configuration hadoopConfig;
 
     @Override
     public void configure(Configuration config) {
-        hadoopConfigLoader.setFlinkConfig(config);
+        this.flinkConfig = config;
+        this.hadoopConfig = null;
     }
 
     @Override
@@ -71,10 +50,20 @@ public class FlinkOBSFsFactory implements FileSystemFactory {
 
     @Override
     public FileSystem create(URI fsUri) throws IOException {
+        // -- (1) get the loaded Hadoop config (or fall back to one loaded from the classpath)
+        final org.apache.hadoop.conf.Configuration hadoopConfig;
+        if (this.hadoopConfig != null) {
+            hadoopConfig = this.hadoopConfig;
+        } else if (flinkConfig != null) {
+            hadoopConfig = HadoopUtils.getHadoopConfiguration(flinkConfig);
+            this.hadoopConfig = hadoopConfig;
+        } else {
+            LOG.warn(
+                "Hadoop configuration has not been explicitly initialized prior to loading a Hadoop file system."
+                    + " Using configuration from the classpath.");
 
-        // create the Hadoop FileSystem
-        org.apache.hadoop.conf.Configuration hadoopConfig =
-            hadoopConfigLoader.getOrLoadHadoopConfig();
+            hadoopConfig = new org.apache.hadoop.conf.Configuration();
+        }
         hadoopConfig.set("fs.file.impl", "org.apache.hadoop.fs.LocalFileSystem");
         org.apache.hadoop.fs.FileSystem fs = new OBSFileSystem();
         fs.initialize(getInitURI(fsUri, hadoopConfig), hadoopConfig);
