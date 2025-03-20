@@ -13,9 +13,9 @@
     <packaging>jar</packaging>
 
     <properties>
-        <flink.version>1.12.1</flink.version>
-        <hadoop.version>3.1.0</hadoop.version>
-        <hadoop.huaweicloud.version>3.1.1-hw-53.8</hadoop.huaweicloud.version>
+        <flink.version>1.19.2</flink.version>
+        <hadoop.version>3.3.5</hadoop.version>
+        <hadoop.huaweicloud.version>3.1.1-hw-53.7</hadoop.huaweicloud.version>
     </properties>
 
     <dependencies>
